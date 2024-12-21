@@ -2,7 +2,6 @@
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
-#include <complex>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -42,10 +41,15 @@ char * read_shadertoy(const char * filename){
 }
 
 
+//basic unifrom params
 GLint count = 100;
 GLfloat r=1.39694462981453571600448659850713f,i=-0.00368452841936819587933234026143f;
 GLfloat t=3.0;
 GLfloat colors[8] = {10.0,7.0,3.0,2.0,4.34,3.14,6.5,7.8};
+
+//param1
+GLfloat cr=1,ci=1;
+
 std::vector<bool> key_states(256,false);
 
 void key_callback(GLFWwindow * window, int key, int scancode, int action, int mode){
@@ -85,6 +89,20 @@ void update_state(){
     if(key_states[GLFW_KEY_M]){
         count--;
     }
+    if(key_states[GLFW_KEY_E]){
+        if(key_states[GLFW_KEY_LEFT_SHIFT]){
+            cr += 0.03f / (t * t);
+        }else{
+            cr -= 0.03f / (t * t);
+        }
+    }
+    if(key_states[GLFW_KEY_R]){
+        if(key_states[GLFW_KEY_LEFT_SHIFT]){
+            ci += 0.03f / (t * t);
+        }else{
+            ci -= 0.03f / (t * t);
+        }
+    }
 
     int j;
     for (j = 0; j < 8;j++) {
@@ -99,18 +117,23 @@ void update_state(){
 }
 
 int main(int argc, char **args){
-    if(!(argc == 2 || argc == 4)){
-        perror("./a.out <shader path> [width] [height]");
+    if(!(argc == 2 || argc == 4 || argc == 5)){
+        perror("./a.out <shader path> [width] [height] [fractal]");
         return -1;
     }
     fragmentShaderSource = read_shadertoy(args[1]);
 
     int width = 1000, height = 600;
+    int fractal = 1;
     if (argc == 4) {
         width = atoi(args[2]);
         height = atoi(args[3]);
     }
-
+    if(argc == 5) {
+        width = atoi(args[2]);
+        height = atoi(args[3]);
+        fractal = atoi(args[4]);
+    }
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
@@ -253,14 +276,14 @@ int main(int argc, char **args){
         GLint iViewSize = glGetUniformLocation(shaderProgram,"iViewSize");
         glUniform1f(iViewSize,t);
 
-        GLint ic1 =glGetUniformLocation(shaderProgram,"c1");
-        GLint ic2 =glGetUniformLocation(shaderProgram,"c2");
-        GLint ic3 =glGetUniformLocation(shaderProgram,"c3");
-        GLint ic4 =glGetUniformLocation(shaderProgram,"c4");
-        GLint it1 =glGetUniformLocation(shaderProgram,"t1");
-        GLint it2 =glGetUniformLocation(shaderProgram,"t2");
-        GLint it3 =glGetUniformLocation(shaderProgram,"t3");
-        GLint it4 =glGetUniformLocation(shaderProgram,"t4");
+        GLint ic1 = glGetUniformLocation(shaderProgram,"c1");
+        GLint ic2 = glGetUniformLocation(shaderProgram,"c2");
+        GLint ic3 = glGetUniformLocation(shaderProgram,"c3");
+        GLint ic4 = glGetUniformLocation(shaderProgram,"c4");
+        GLint it1 = glGetUniformLocation(shaderProgram,"t1");
+        GLint it2 = glGetUniformLocation(shaderProgram,"t2");
+        GLint it3 = glGetUniformLocation(shaderProgram,"t3");
+        GLint it4 = glGetUniformLocation(shaderProgram,"t4");
         glUniform1f(ic1,colors[0]);
         glUniform1f(ic2,colors[1]);
         glUniform1f(ic3,colors[2]);
@@ -269,6 +292,12 @@ int main(int argc, char **args){
         glUniform1f(it2,colors[5]);
         glUniform1f(it3,colors[6]);
         glUniform1f(it4,colors[7]);
+
+        GLint fractalOption = glGetUniformLocation(shaderProgram,"fractalOption");
+        glUniform1i(fractalOption,fractal);
+
+        GLint param1 = glGetUniformLocation(shaderProgram,"param1");
+        glUniform2f(param1,cr,ci);
 
         //bind
         glBindVertexArray(VAO);

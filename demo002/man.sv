@@ -13,6 +13,8 @@ uniform float t1;
 uniform float t2;
 uniform float t3;
 uniform float t4;
+uniform int fractalOption;
+uniform vec2 param1;
 in vec4 viewSpace;
 out vec4 color;
 
@@ -41,6 +43,20 @@ vec4 mandel(in vec2 p, int count){
     return vec4(0.0f,0.0f,0.0f,1.0f);
 }
 
+vec4 julia(in vec2 p, in vec2 c, int count){
+    vec2 uv = p;
+    int i;
+    for (i = 0; i < count;i++) {
+        uv = vec2(uv.x * uv.x - uv.y * uv.y, 2.0f * uv.x * uv.y) + c;
+        if(length(uv) > 3.0f){
+            return colors(float(i) / float(count));
+            //return vec4(uv,0.5f,1.0f);
+        }
+    }
+    //return colors(float(i) / float(count));
+    return vec4(0.0f,0.0f,0.0f,1.0f);
+}
+
 vec4 newton_fractal(in vec2 p, int count){
     vec2 uv = p;
     vec2 p0;
@@ -48,16 +64,25 @@ vec4 newton_fractal(in vec2 p, int count){
     vec2 c;
     int i;
     for(i = 0; i < count; i++){
-        p0 = vec2(uv.x*uv.x - uv.y * uv.y - 1, 2.0f * uv.x * uv.y);
-        p1 = 2 * uv;
+        p1 = vec2(uv.x * uv.x - uv.y * uv.y, 2.0f * uv.x * uv.y);
+        p0 = vec2(uv.x * p1.x - uv.y*p1.y,uv.x * p1.y + uv.y * p1.x);
+        p1 *= 3;
         c = vec2(((p0.x * p1.x + p0.y * p1.y) / (p1.x*p1.x + p1.y*p1.y)),(p0.x*p1.y - p0.y*p1.x)/(p1.x*p1.x + p1.y*p1.y));
-        c = vec2(c.x - c.y,c.x + c.y);
+        //c = vec2(c.x - c.y,c.x + c.y);
 
         uv = uv - c;
-        if(length(uv - vec2(-1,0)) < 0.5f){
-            return colors(float(i) / float(count));
-        }else if(length(uv - vec2(1,0)) < 0.5f){
-            return colors(float(i) / float(count) + 3.0f);
+
+        vec2 diff = uv - vec2(1,0);
+        if(abs(diff.x) < 0.5f && abs(diff.y) < 0.5f){
+            return colors(1.0f);
+        }
+        diff = uv - vec2(-.5,sqrt(3)/2);
+        if(abs(diff.x) < 0.5f && abs(diff.y) < 0.5f){
+            return colors(2.0f);
+        }
+        diff = uv - vec2(-.5,-sqrt(3)/2);
+        if(abs(diff.x) < 0.5f && abs(diff.y) < 0.5f){
+            return colors(3.0f);
         }
     }
     return vec4(0.0f,0.0f,0.0f,1.0f);
@@ -78,7 +103,12 @@ void main()
     float t = 1.0f / (pow(iViewSize, 2.0f));
 
     vec2 uv = viewSpace.xy * t - iPointer;
-    vec4 mv = mandel(uv, iCount);
+    vec4 mv;
+    if(fractalOption == 1){
+        mv = mandel(uv, iCount);
+    } else{
+        mv = julia(uv,param1, iCount);
+    }
 
     // Output to screen
     color = mv;
