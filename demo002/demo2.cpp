@@ -46,9 +46,17 @@ GLint count = 100;
 GLfloat r=1.39694462981453571600448659850713f,i=-0.00368452841936819587933234026143f;
 GLfloat t=3.0;
 GLfloat colors[8] = {10.0,7.0,3.0,2.0,4.34,3.14,6.5,7.8};
+GLfloat fixedPrecision=0.00000001f;
 
-//param1
-GLfloat cr=1,ci=1;
+GLfloat params[14]= {
+    1,1,
+    0,1,
+    0,-1,
+    -1,0.171,
+    -1,-0171,
+    1,0,
+    -1,0,
+};
 
 std::vector<bool> key_states(256,false);
 
@@ -89,23 +97,28 @@ void update_state(){
     if(key_states[GLFW_KEY_M]){
         count--;
     }
-    if(key_states[GLFW_KEY_E]){
-        if(key_states[GLFW_KEY_LEFT_SHIFT]){
-            cr += 0.03f / (t * t);
-        }else{
-            cr -= 0.03f / (t * t);
+
+    int j;
+    for (j = 0; j < 7;j++) {
+        if(key_states[GLFW_KEY_E] && key_states[GLFW_KEY_1 + j]){
+            if(key_states[GLFW_KEY_LEFT_SHIFT]){
+                params[j*2] += 0.003f / (t * t);
+            }else{
+                params[j*2] -= 0.003f / (t * t);
+            }
+            printf("update param%d(%lf,%lf)\n",j,params[j*2],params[j*2+1]);
         }
-    }
-    if(key_states[GLFW_KEY_R]){
-        if(key_states[GLFW_KEY_LEFT_SHIFT]){
-            ci += 0.03f / (t * t);
-        }else{
-            ci -= 0.03f / (t * t);
+        if(key_states[GLFW_KEY_R] && key_states[GLFW_KEY_1 + j]){
+            if(key_states[GLFW_KEY_LEFT_SHIFT]){
+                params[j*2+1] += 0.003f / (t * t);
+            }else{
+                params[j*2+1] -= 0.003f / (t * t);
+            }
+            printf("update param%d(%lf,%lf)\n",j,params[j*2],params[j*2+1]);
         }
     }
 
-    int j;
-    for (j = 0; j < 8;j++) {
+    for (j = 0; key_states[GLFW_KEY_SPACE] && j < 8;j++) {
         if(key_states[GLFW_KEY_0 + j]){
             if(key_states[GLFW_KEY_LEFT_SHIFT]){
                 colors[j]--;
@@ -293,11 +306,26 @@ int main(int argc, char **args){
         glUniform1f(it3,colors[6]);
         glUniform1f(it4,colors[7]);
 
+        GLint fixedPrecisionLocation = glGetUniformLocation(shaderProgram,"fixedPrecision");
+        glUniform1f(fixedPrecisionLocation,fixedPrecision);
+
         GLint fractalOption = glGetUniformLocation(shaderProgram,"fractalOption");
         glUniform1i(fractalOption,fractal);
 
         GLint param1 = glGetUniformLocation(shaderProgram,"param1");
-        glUniform2f(param1,cr,ci);
+        glUniform2f(param1,params[0],params[1]);
+        GLint param2 = glGetUniformLocation(shaderProgram,"param2");
+        glUniform2f(param2,params[2],params[3]);
+        GLint param3 = glGetUniformLocation(shaderProgram,"param3");
+        glUniform2f(param3,params[4],params[5]);
+        GLint param4 = glGetUniformLocation(shaderProgram,"param4");
+        glUniform2f(param4,params[6],params[7]);
+        GLint param5 = glGetUniformLocation(shaderProgram,"param5");
+        glUniform2f(param5,params[8],params[9]);
+        GLint param6 = glGetUniformLocation(shaderProgram,"param6");
+        glUniform2f(param5,params[10],params[11]);
+        GLint param7 = glGetUniformLocation(shaderProgram,"param7");
+        glUniform2f(param7,params[12],params[13]);
 
         //bind
         glBindVertexArray(VAO);
