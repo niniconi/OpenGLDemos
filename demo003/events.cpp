@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 #include <vector>
-#include <iostream>
 
 #include "physics_simulator.hpp"
 

@@ -1,7 +1,6 @@
 #include "object.hpp"
 #include <GL/gl.h>
 #include <cmath>
-#include <initializer_list>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -71,13 +70,18 @@ float Object::distance(Object& obj){
     return std::sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-static std::pair<std::vector<Vertex>,std::vector<Triangle_Link>> build_sphere(float r){
+void Grid::transform(float x, float y, float z, float coord){
+
+}
+
+static std::pair<std::vector<Vertex>,std::vector<Triangle_Link>> build_sphere(float r) {
     float dx = 0.1f,i,j;
     GLuint k = 0;
     GLuint line_size = 2*M_PI / dx + 1;
     r=r>0?r:-r;
     std::vector<Vertex> vertices;
     std::vector<Triangle_Link> indices;
+
     for(i=-M_PI/2;i<M_PI/2;i+=dx){
         for(j=0;j<2*M_PI;j+=dx){
             vertices.push_back({
@@ -98,7 +102,18 @@ static std::pair<std::vector<Vertex>,std::vector<Triangle_Link>> build_sphere(fl
     return std::make_pair(vertices,indices);
 }
 
-Object* draw_line(float x1, float y1, float z1, float x2, float y2, float z2){
+static float distance(Vertex& a, Vertex& b){
+    float dx = a.position.x - b.position.x;
+    float dy = a.position.y - b.position.y;
+    float dz = a.position.z - b.position.z;
+    return sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+Object* draw_line(Vertex& src, Vertex& dst){
+    return draw_line(src.position.x, src.position.y, src.position.z, dst.position.x, dst.position.y, dst.position.z);
+}
+
+Object* draw_line(float x1, float y1, float z1, float x2, float y2, float z2) {
     Line* line = new Line(x1,y1,z1,x2,y2,z2);
     std::vector<Vertex> vertices = {
         {{0,0,0},{}},
@@ -111,7 +126,7 @@ Object* draw_line(float x1, float y1, float z1, float x2, float y2, float z2){
     return line;
 }
 
-Object* draw_sphere(float x,float y,float z, float m, glm::vec3 v, float r){
+Object* draw_sphere(float x,float y,float z, float m, glm::vec3 v, float r) {
     Sphere* cirl = new Sphere(x,y,z,m,v,r);
     std::pair<std::vector<Vertex>, std::vector<Triangle_Link>> model = build_sphere(r);
     cirl->push_triangles(model.first,model.second);
@@ -119,7 +134,7 @@ Object* draw_sphere(float x,float y,float z, float m, glm::vec3 v, float r){
     return cirl;
 }
 
-Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float side_length){
+Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float side_length) {
     Cube* cube = new Cube(x,y,z,m,v);
     std::vector<Vertex> vertices = {
         {{-0.5f*side_length, -0.5f*side_length, -0.75f*side_length},{}}, // 顶点 1
@@ -159,6 +174,37 @@ Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float side_le
     cube->push_triangles(vertices,indices);
     return cube;
 }
+
 Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float z_side_length, float x_side_length, float y_side_length){
     return nullptr;
+}
+
+Object* draw_grid(float granularity, float range){
+    std::vector<Vertex> vertices;
+    std::vector<Line*> objs;
+
+    float x, y, z;
+    float offset = range - ((int)(range / granularity))*granularity;
+    size_t i;
+    size_t line_size = 2*(int)(range / granularity) + 1;
+    Grid* grid = new Grid();
+
+    for(x=-range + offset;x<=range;x+=granularity){
+        for(y=-range + offset;y<=range;y+=granularity){
+            for(z=-range + offset;z<=range;z+=granularity){
+                vertices.push_back({{x,y,z}});
+            }
+        }
+    }
+
+    for(i=0;i<vertices.size();i++){
+        if(i+1 < vertices.size() && (i % line_size )+1 < line_size)
+            objs.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+1])));
+        if(i+line_size < vertices.size() && (i % (line_size * line_size)) / line_size + 1 < line_size)
+            objs.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size])));
+        if(i+line_size*line_size < vertices.size())
+            objs.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size*line_size])));
+    }
+    grid->push_lines(objs);
+    return grid;
 }
