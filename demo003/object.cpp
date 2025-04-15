@@ -70,7 +70,7 @@ float Object::distance(Object& obj){
     return std::sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-void Grid::transform(float x, float y, float z, float coord){
+void Grid3D::transform(float x, float y, float z, float coord){
 
 }
 
@@ -179,15 +179,42 @@ Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float z_side_
     return nullptr;
 }
 
-Object* draw_grid(float granularity, float range){
+Object* draw_grid_2d(float granularity, float range, float y){
     std::vector<Vertex> vertices;
-    std::vector<Line*> objs;
+    std::vector<Line*> lines;
+
+    float x, z;
+    float offset = range - ((int)(range / granularity))*granularity;
+    size_t line_size = 2*(int)(range / granularity) + 1;
+    size_t i;
+    Grid2D* grid2d = new Grid2D();
+
+    for(x = -range + offset;x<=range;x+=granularity){
+        for(z = -range + offset;z<=range;z+=granularity){
+            vertices.push_back({{x,y,z}});
+        }
+    }
+
+    for(i=0;i<vertices.size();i++){
+        if(i+1 < vertices.size() && (i % line_size)+1 < line_size)
+            lines.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+1])));
+        if(i+line_size < vertices.size())
+            lines.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size])));
+    }
+
+    grid2d->push_lines(lines);
+    return grid2d;
+}
+
+Object* draw_grid_3d(float granularity, float range){
+    std::vector<Vertex> vertices;
+    std::vector<Line*> lines;
 
     float x, y, z;
     float offset = range - ((int)(range / granularity))*granularity;
     size_t i;
     size_t line_size = 2*(int)(range / granularity) + 1;
-    Grid* grid = new Grid();
+    Grid3D* grid3d = new Grid3D();
 
     for(x=-range + offset;x<=range;x+=granularity){
         for(y=-range + offset;y<=range;y+=granularity){
@@ -199,12 +226,12 @@ Object* draw_grid(float granularity, float range){
 
     for(i=0;i<vertices.size();i++){
         if(i+1 < vertices.size() && (i % line_size )+1 < line_size)
-            objs.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+1])));
+            lines.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+1])));
         if(i+line_size < vertices.size() && (i % (line_size * line_size)) / line_size + 1 < line_size)
-            objs.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size])));
+            lines.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size])));
         if(i+line_size*line_size < vertices.size())
-            objs.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size*line_size])));
+            lines.push_back(static_cast<Line*>(draw_line(vertices[i],vertices[i+line_size*line_size])));
     }
-    grid->push_lines(objs);
-    return grid;
+    grid3d->push_lines(lines);
+    return grid3d;
 }

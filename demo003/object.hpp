@@ -67,21 +67,33 @@ class Line: public Object{
         Line(float x1, float y1, float z1, float x2, float y2, float z2) : Object(x1,y1,z1,0,glm::vec3(0,0,0)), x2(x2), y2(y2), z2(z2) {};
 };
 
-class Grid: public Object{
+class Grid3D: public Object{
     private:
         std::vector<Line*> lines;
     public:
-        Grid() :Object(0,0,0,0,glm::vec3(0,0,0)) {};
+        Grid3D() :Object(0,0,0,0,glm::vec3(0,0,0)) {};
         void push_lines(std::vector<Line*> lines){
             this->lines.insert(this->lines.begin(),lines.begin(),lines.end());
         }
         void transform(float x, float y, float z, float coord);
 };
 
+class Grid2D: public Object{
+    private:
+        std::vector<Line*> lines;
+    public:
+        Grid2D() :Object(0,0,0,0,glm::vec3(0,0,0)) {};
+        void push_lines(std::vector<Line*> lines){
+            this->lines.insert(this->lines.begin(),lines.begin(),lines.end());
+        }
+        void transform(float x, float z, float coord);
+};
+
 Object* draw_sphere(float x,float y,float z, float m, glm::vec3 v, float r);
 Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float side_length);
 Object* draw_cube(float x, float y, float z, float m, glm::vec3 v, float z_side_length,float x_side_length,float y_side_length);
 Object* draw_line(float x1, float y1, float z1, float x2, float y2, float z2);
-Object* draw_grid(float granularity, float range);
+Object* draw_grid_3d(float granularity, float range);
+Object* draw_grid_2d(float granularity, float range, float y);
 
 #endif
