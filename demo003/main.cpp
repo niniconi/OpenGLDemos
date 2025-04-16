@@ -98,6 +98,9 @@ std::vector<Triangle_Link> global_indices = {
     {1, 6, 2}
 };
 
+Grid2D* global_grid2d = nullptr;
+Grid3D* global_grid3d = nullptr;
+
 void update_camera(int width,int height){
     view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
     projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
@@ -130,6 +133,23 @@ void update_state(){
 
         draw_line(x1, y1, z1, x2, y2, z2);
     }
+
+    if(global_grid2d != nullptr){
+        for(i=0;i<global_objects.size();i++){
+            if(global_objects[i]->m == 0)
+                continue;
+            global_grid2d->transform(global_objects[i]->get_x(), global_objects[i]->get_z(), global_objects[i]->m);
+        }
+    }
+
+    if(global_grid3d != nullptr){
+        for(i=0;i<global_objects.size();i++){
+            if(global_objects[i]->m == 0)
+                continue;
+            global_grid3d->transform(global_objects[i]->get_x(), global_objects[i]->get_y(), global_objects[i]->get_z(), global_objects[i]->m);
+        }
+    }
+
 }
 
 void _debug(){

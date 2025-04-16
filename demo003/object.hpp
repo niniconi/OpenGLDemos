@@ -35,7 +35,7 @@ class Object{
         Object(float x,float y, float z, float m, glm::vec3 v) :x(x), y(y),z(z),m(m), v(v) {};
 
         void push_triangles(std::vector<Vertex>& vertices, std::vector<Triangle_Link>& indices);
-        void move(float dx,float dy, float dz);
+        void move(float dx, float dy, float dz);
         void move(glm::vec3 v);
         float distance(Object& obj);
         float dx(Object& obj) {return obj.x - this->x;};
@@ -44,6 +44,10 @@ class Object{
         std::tuple<float, float, float> get_position();
         void set_trajectory(bool show);
         bool get_trajectory();
+        float get_x(){return this->x;};
+        float get_y(){return this->y;};
+        float get_z(){return this->z;};
+        std::vector<size_t>& get_vertices() {return this->vertices;};
 };
 
 class Cube: public Object{
@@ -62,9 +66,14 @@ class Sphere: public Object{
 
 class Line: public Object{
     private:
-        float x2,y2,z2;
+        float dx1 = 0, dy1 = 0, dz1 = 0;
+        float dx2 = 0, dy2 = 0, dz2 = 0;
+        float x2, y2, z2;
     public:
         Line(float x1, float y1, float z1, float x2, float y2, float z2) : Object(x1,y1,z1,0,glm::vec3(0,0,0)), x2(x2), y2(y2), z2(z2) {};
+        std::tuple<float, float, float> get_position_dst();
+        void move_src(float dx, float dy, float dz);
+        void move_dst(float dx, float dy, float dz);
 };
 
 class Grid3D: public Object{
@@ -75,7 +84,7 @@ class Grid3D: public Object{
         void push_lines(std::vector<Line*> lines){
             this->lines.insert(this->lines.begin(),lines.begin(),lines.end());
         }
-        void transform(float x, float y, float z, float coord);
+        void transform(float x, float y, float z, float m);
 };
 
 class Grid2D: public Object{
@@ -86,7 +95,7 @@ class Grid2D: public Object{
         void push_lines(std::vector<Line*> lines){
             this->lines.insert(this->lines.begin(),lines.begin(),lines.end());
         }
-        void transform(float x, float z, float coord);
+        void transform(float x, float z, float m);
 };
 
 Object* draw_sphere(float x,float y,float z, float m, glm::vec3 v, float r);

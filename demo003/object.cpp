@@ -10,6 +10,7 @@
 extern std::vector<Vertex> global_vertices;
 extern std::vector<Triangle_Link> global_indices;
 extern std::vector<Object*> global_objects;
+extern Grid2D* global_grid2d;
 
 void Object::push_triangles(std::vector<Vertex>& vertices, std::vector<Triangle_Link>& indices){
     uint offset_of_vertices = global_vertices.size();
@@ -70,7 +71,48 @@ float Object::distance(Object& obj){
     return std::sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-void Grid3D::transform(float x, float y, float z, float coord){
+void Line::move_src(float dx, float dy, float dz){
+    auto t = this->get_vertices()[0];
+    global_vertices[t].position.x += dx - this->dx1;
+    global_vertices[t].position.y += dy - this->dy1;
+    global_vertices[t].position.z += dz - this->dz1;
+    this->dx1 = dx;
+    this->dy1 = dy;
+    this->dz1 = dz;
+}
+
+void Line::move_dst(float dx, float dy, float dz){
+    auto t = this->get_vertices()[1];
+    auto x = this->get_vertices()[2];
+    global_vertices[t].position.x += dx - this->dx2;
+    global_vertices[t].position.y += dy - this->dy2;
+    global_vertices[t].position.z += dz - this->dz2;
+    global_vertices[x].position.x += dx - this->dx2;
+    global_vertices[x].position.y += dy - this->dy2;
+    global_vertices[x].position.z += dz - this->dz2;
+    this->dx2 = dx;
+    this->dy2 = dy;
+    this->dz2 = dz;
+}
+
+std::tuple<float, float, float> Line::get_position_dst(){
+    return std::tuple(x2,y2,z2);
+}
+
+
+void Grid2D::transform(float x, float z, float m){
+    if(m <= 0.0f) return;
+    for(auto l:this->lines){
+        auto [x1, y1, z1] = l->get_position();
+        auto [x2, y2, z2] = l->get_position_dst();
+        float p1 = -std::pow(m,-std::abs((x1-x)*(x1-x)+(z1-z)*(z1-z))/(m/1000));
+        float p2 = -std::pow(m,-std::abs((x2-x)*(x2-x)+(z2-z)*(z2-z))/(m/1000));
+        l->move_src(0, p1, 0);
+        l->move_dst(0, p2, 0);
+    }
+}
+
+void Grid3D::transform(float x, float y, float z, float m){
 
 }
 
@@ -203,6 +245,7 @@ Object* draw_grid_2d(float granularity, float range, float y){
     }
 
     grid2d->push_lines(lines);
+    global_grid2d = grid2d;
     return grid2d;
 }
 
